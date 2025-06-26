@@ -199,8 +199,12 @@ for i in range(len(db)):
     check_des = db.Descrizione.iloc[i]
     check_disegno = db.Disegno.iloc[i]
     for lav in speciali:
-        if (lav in check_des) or (lav in check_disegno):
+        if ((lav in check_des) or (lav in check_disegno)):           
             db['Lavorazioni'].iloc[i] = lav
+            break
+        elif ((lav in check_des) and (lav in check_disegno)):
+            db['Lavorazioni'].iloc[i] = lav
+            break
         else:
             db['Lavorazioni'].iloc[i] = '-'
 
