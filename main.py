@@ -217,7 +217,7 @@ speciali = [
 #db['Lavorazioni'] = ['ZED' in check for check in db.Descrizione]
 db.drop(columns=['Indice','Tipo','Data_consegna','Posizione'], inplace=True)
 db = db[['BOCCETT' not in check for check in db.Descrizione]]
-
+db = db[['FORMELL' not in check for check in db.Descrizione]]
 #db['Qty'] = [valore.replace('.','') for valore in db.Qty]
 db['Qty'] = db['Qty'].astype(int)
 
