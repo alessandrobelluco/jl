@@ -239,7 +239,7 @@ db['Larghezza'] = db['Larghezza'].astype(float)
 db = db.groupby(by=['Codice','Descrizione','Disegno','Finitura','Altezza','Larghezza'], as_index=False).sum()
 
 db['MQ'] = np.round((db.Altezza * db.Larghezza) / 1000000 * db.Qty,2)
-db['ML'] = np.round((db.Altezza + db.Larghezza)*2/1000, 2)
+db['ML'] = np.round((db.Altezza + db.Larghezza)*2 *db.Qty/1000, 2)
 
 db['Lavorazioni'] = None
 
