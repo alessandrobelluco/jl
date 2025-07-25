@@ -212,6 +212,7 @@ speciali = [
     'DIP',
     'DMRDIP',
     'STREAM',
+    'FRES'
 ]
 
 #db['Lavorazioni'] = ['ZED' in check for check in db.Descrizione]
