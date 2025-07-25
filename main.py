@@ -4,6 +4,7 @@ import pandas as pd
 from PyPDF2 import PdfReader
 from io import BytesIO
 import xlsxwriter
+import numpy as np
 
 
 
@@ -28,6 +29,8 @@ for page in pages:
         #words.append(words_i)
 
 #Elaborazione====================================================================================================================
+
+
 
 
 # il primo marker per identificare la riga è P.zo, i successivi  "---------"
@@ -92,6 +95,7 @@ for i in range(len(words)-1):
         codice = words[i+2]
         descrizione = words[i+3]
         k=1
+
         while (words[i+3+k] != 'PZ') and (words[i+3+k] != 'CM2') and (words[i+3+k][-2:] != 'PZ') :
             descrizione += f' {words[i+3+k]}'
             k+=1
@@ -104,24 +108,36 @@ for i in range(len(words)-1):
 
             try:
                 qty = words[placeh+1]
+                if words[placeh] != 'PZ':
+                    qty = 1
             except:
                 placeh
 
             datacons = words[placeh+2]
             
             for a in range(placeh, len(words)):
+
                 if words[a]=='Dis.':
+                    pos_dis = a
                     disegno=words[a+1]
 
                 if words[a]=='Altezza':
                     alt = words[a+2]
+                    if alt == 'acquisto':
+                        alt = words[a+3]
+
                     um_alt = words[a+3]
                 if words[a]=='Larghezza':
                     lar = words[a+2]
+                    if lar == 'acquisto':
+                        lar = words[a+3]
                     um_lar = words[a+3]
                 if words[a]=='Finitura':
                     fin = words[a+1]
                     break
+                if words[a]=='R.': #nelle posizioni dove non c'è Finitura, quindi va interrotto prima il while
+                    break
+
 
             # nuova riga del db
             db.loc[len(db)]=[None,None,None,None,None,None,None,None,None,None,None]
@@ -151,6 +167,8 @@ for i in range(len(words)-1):
             n+=1
         placeh = k+i+7+n
         qty = words[placeh+1]
+        if words[placeh] != 'PZ':
+            qty = 1
         datacons = words[placeh+2]
 
         for a in range(placeh, len(words)):
@@ -159,12 +177,18 @@ for i in range(len(words)-1):
 
             if words[a]=='Altezza':
                 alt = words[a+2]
+                if alt == 'acquisto':
+                        alt = words[a+3]
                 um_alt = words[a+3]
             if words[a]=='Larghezza':
                 lar = words[a+2]
+                if lar == 'acquisto':
+                        lar = words[a+3]
                 um_lar = words[a+3]
             if words[a]=='Finitura':
                 fin = words[a+1]
+                break
+            if words[a]=='R.':
                 break
             # nuova riga del db
         db.loc[len(db)]=[None,None,None,None,None,None,None,None,None,None,None]
@@ -191,7 +215,31 @@ speciali = [
 ]
 
 #db['Lavorazioni'] = ['ZED' in check for check in db.Descrizione]
-db.drop(columns=['Indice','Tipo'], inplace=True)
+db.drop(columns=['Indice','Tipo','Data_consegna','Posizione'], inplace=True)
+
+
+#db['Qty'] = [valore.replace('.','') for valore in db.Qty]
+db['Qty'] = db['Qty'].astype(int)
+
+# modifico il formato dei numeri
+db['Altezza'] = [valore.replace(',','+') for valore in db.Altezza]
+db['Altezza'] = [valore.replace('.',',') for valore in db.Altezza]
+db['Altezza'] = [valore.replace('+','.') for valore in db.Altezza]
+db['Altezza'] = [valore.replace(',','') for valore in db.Altezza]
+
+db['Larghezza'] = [valore.replace(',','+') for valore in db.Larghezza]
+db['Larghezza'] = [valore.replace('.',',') for valore in db.Larghezza]
+db['Larghezza'] = [valore.replace('+','.') for valore in db.Larghezza]
+db['Larghezza'] = [valore.replace(',','') for valore in db.Larghezza]
+
+db['Altezza'] = db['Altezza'].astype(float)
+db['Larghezza'] = db['Larghezza'].astype(float)
+
+
+db = db.groupby(by=['Codice','Descrizione','Disegno','Finitura','Altezza','Larghezza'], as_index=False).sum()
+
+db['MQ'] = np.round((db.Altezza * db.Larghezza) / 1000000 * db.Qty,2)
+db['ML'] = np.round((db.Altezza + db.Larghezza)*2/1000, 2)
 
 db['Lavorazioni'] = None
 
@@ -209,6 +257,15 @@ for i in range(len(db)):
             db['Lavorazioni'].iloc[i] = '-'
 
 
+# preparazione layout per esportazione in Excel
+
+layout = ['Descrizione','Altezza','Larghezza','Qty','MQ','ML','Lavorazioni']
+
+
+db = db[layout]
+db.loc[-1] = ['Totale','','',db.Qty.sum(),db.MQ.sum(),db.ML.sum(),'']
+
+
 def scarica_excel(df, filename):
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
@@ -222,6 +279,9 @@ def scarica_excel(df, filename):
         mime="application/vnd.ms-excel"
     )
 
-
 db
+
+
 scarica_excel(db, 'Ordine_elaborato.xlsx')
+
+
