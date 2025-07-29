@@ -114,7 +114,7 @@ for i in range(len(words)-1):
                 placeh
 
             datacons = words[placeh+2]
-            
+            disegno = 'ND'
             for a in range(placeh, len(words)):
 
                 if words[a]=='Dis.':
@@ -134,7 +134,7 @@ for i in range(len(words)-1):
                     um_lar = words[a+3]
                 if words[a]=='Finitura':
                     fin = words[a+1]
-                    break
+                    
                 if words[a]=='R.': #nelle posizioni dove non c'è Finitura, quindi va interrotto prima il while
                     break
 
@@ -170,7 +170,7 @@ for i in range(len(words)-1):
         if words[placeh] != 'PZ':
             qty = 1
         datacons = words[placeh+2]
-
+        disegno = 'ND'
         for a in range(placeh, len(words)):
             if words[a]=='Dis.':
                   disegno=words[a+1]
@@ -187,7 +187,7 @@ for i in range(len(words)-1):
                 um_lar = words[a+3]
             if words[a]=='Finitura':
                 fin = words[a+1]
-                break
+                
             if words[a]=='R.':
                 break
             # nuova riga del db
